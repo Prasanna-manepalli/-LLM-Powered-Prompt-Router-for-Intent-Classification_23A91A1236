@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  # CLI batch-test service (no web UI)
+  prompt-router:
+    build: .
+    env_file:
+      - .env
+    volumes:
+      - ./:/app
+    command: ["python", "main.py", "--batch-test"]
+
+  # Web UI service exposed on http://localhost:8000
+  prompt-router-web:
+    build: .
+    env_file:
+      - .env
+    volumes:
+      - ./:/app
+    command: ["uvicorn", "app.web:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
