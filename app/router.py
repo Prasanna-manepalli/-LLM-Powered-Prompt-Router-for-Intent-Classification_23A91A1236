@@ -111,13 +111,22 @@ def _log_routing_decision(
 
     log_path = os.getenv("ROUTE_LOG_PATH", "route_log.jsonl")
 
-    # Ensure directory exists if a nested path is provided
-    log_dir = os.path.dirname(log_path)
-    if log_dir and not os.path.exists(log_dir):
-        os.makedirs(log_dir, exist_ok=True)
+    try:
+        # Ensure directory exists if a nested path is provided
+        log_dir = os.path.dirname(log_path)
+        if log_dir and not os.path.exists(log_dir):
+            os.makedirs(log_dir, exist_ok=True)
 
-    with open(log_path, "a", encoding="utf-8") as f:
-        f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
+    except (OSError, PermissionError):
+        # Fallback to /tmp in serverless/read-only environments like Vercel
+        try:
+            tmp_path = os.path.join("/tmp", "route_log.jsonl")
+            with open(tmp_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
+        except Exception:
+            pass
 
 
 def route_and_respond(message: str, intent_obj: Dict[str, Any]) -> str:
